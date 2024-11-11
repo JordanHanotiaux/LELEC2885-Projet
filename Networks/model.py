@@ -1,7 +1,6 @@
 from Dataset.dataLoader import *
 from Dataset.makeGraph import *
 from Networks.Architectures.basicNetwork import *
-from Networks.Architectures.unet import *
 
 import numpy as np
 np.random.seed(2885)
@@ -64,8 +63,8 @@ class Network_Class:
         # -------------------
         # TRAINING PARAMETERS
         # -------------------
-        self.criterion = ...
-        self.optimizer = ... 
+        self.criterion = nn.BCELoss()
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr) 
 
         # ----------------------------------------------------
         # DATASET INITIALISATION (from the dataLoader.py file)
@@ -89,20 +88,70 @@ class Network_Class:
     # -----------------------------------
     def train(self): 
         # train for a given number of epochs
-        for i in range(self.epoch):
-            print("Loss at i-th epoch: ", str(np.random.random_sample()))
-            modelWts = copy.deepcopy(self.model.state_dict())
+        train_losses, val_losses = [], []
 
-        # Print learning curves
-        # Implement this...
+        for i in range(self.epoch):
+
+            #Train mode
+            self.model.train()
+            train_loss = 0.0
+
+            #Training loop
+            for images, masks, _ in self.trainDataLoader:
+                images, masks = images.to(self.device), masks.to(self.device)
+                masks = masks.unsqueeze(1).float()
+                #Rétropropagation
+                self.optimizer.zero_grad()
+                #Update weights
+                outputs = self.model(images)
+                loss = self.criterion(outputs, masks)
+                train_loss += loss.item()
+                loss.backward()
+                self.optimizer.step()
+
+            #Average loss
+            avg_train_loss = train_loss / len(self.trainDataLoader)
+            train_losses.append(avg_train_loss)
+
+            #Evaluation
+            self.model.eval()
+            val_loss = 0.0
+            with torch.no_grad():
+                for images, masks, _ in self.valDataLoader:
+                    images, masks = images.to(self.device), masks.to(self.device)
+                    masks = masks.unsqueeze(1).float()
+                    outputs = self.model(images)
+                    loss = self.criterion(outputs, masks)
+                    val_loss += loss.item()
+
+            #Average loss
+            avg_val_loss = val_loss / len(self.valDataLoader)
+            val_losses.append(avg_val_loss)
+
+            print(f"Loss at {i}-th epoch: ")
+            print(f"Train Loss: {avg_train_loss:.4f} | Val Loss: {avg_val_loss:.4f}")
+
+            modelWts = copy.deepcopy(self.model.state_dict())
 
         # Save the model weights
         wghtsPath  = self.resultsPath + '/_Weights/'
         createFolder(wghtsPath)
         torch.save(modelWts, wghtsPath + '/wghts.pkl')
 
+        self.plot(train_losses, val_losses)
 
 
+
+    def plot(self, train_losses, val_losses):
+        plt.figure(figsize=(10, 6))
+        plt.plot(train_losses, label='Train Loss')
+        plt.plot(val_losses, label='Validation Loss')
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss')
+        plt.title('Training and Validation Loss')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
     # -------------------------------------------------
     # EVALUATION PROCEDURE (ultra basic implementation)
     # -------------------------------------------------

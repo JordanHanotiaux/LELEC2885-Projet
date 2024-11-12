@@ -88,8 +88,8 @@ class UNetSmnticSgmntr(Sequential):
         self.threshold: float = threshold
 
 
-    def pred(self, x: Tensor) -> Tensor:
-        return (self(x) > self.threshold).long()
+    def pred(self, x: Tensor, threshold) -> Tensor:
+        return (self(x) > threshold).long()
 
 
 

@@ -1,7 +1,7 @@
 ---
 DATASET:
   # size of the images 
-  RESIZE_SHAPE: 64x64
+  RESIZE_SHAPE: 256x256
 
 MODEL:
   # A parameter to control model complexity 
@@ -11,8 +11,11 @@ MODEL:
   
 TRAINING: 
   LEARNING_RATE: 0.001
-  EPOCH: 1
+  EPOCH: 200
   BATCH_SIZE: 16
   # cpu (to run on cpu) or cuda (to run on gpu)
   DEVICE: cpu 
   # Do not hesitate to add other parameters...
+  DEPTH : 1
+  TRESHOLD : 0.5
+  OPTIMIZER : ADAM

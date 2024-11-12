@@ -163,7 +163,7 @@ class Network_Class:
         allInputs, allPreds, allGT = [], [], []
         for (images, GT, resizedImg) in self.testDataLoader:
             images      = images.to(self.device)
-            predictions = self.model(images)
+            predictions = self.model.pred(images, 0.5)
 
             images, predictions = images.to('cpu'), predictions.to('cpu')
 

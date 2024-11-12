@@ -9,7 +9,7 @@ from torch.nn import (
     ConvTranspose2d,
     Identity,
 )
-from InvResBottleneck import InvResBtlnk
+from Networks.Architectures.InvResBottleneck import *
 
 
 

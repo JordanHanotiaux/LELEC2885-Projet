@@ -10,7 +10,7 @@ from torch.nn import (
     Sigmoid,
     Identity,
 )
-from UNetBlock import UNetBlock
+from Networks.Architectures.UNetBlock import *
 
 
 
@@ -75,13 +75,13 @@ class UNetSmnticSgmntr(Sequential):
             PReLU(),
             Conv2d(
                 in_channels=in_ch,
-                out_channels=in_ch,
+                out_channels=1,
                 kernel_size=(3, 3),
                 stride=(1, 1),
                 padding='same'
             ),
             PReLU(),
-            BatchNorm2d(num_features=in_ch),
+            BatchNorm2d(num_features=1),
             Sigmoid()
         )
 

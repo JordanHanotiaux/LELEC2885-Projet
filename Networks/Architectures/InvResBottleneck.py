@@ -7,7 +7,7 @@ from torch.nn import (
     Conv2d,
     Sequential,
 )
-from DepthSeparableConv import DpthSpConv
+from Networks.Architectures.DepthSeparableConv import *
 
 
 

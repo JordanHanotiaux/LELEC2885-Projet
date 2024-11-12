@@ -1,6 +1,6 @@
 from Dataset.dataLoader import *
 from Dataset.makeGraph import *
-from Networks.Architectures.basicNetwork import *
+from Networks.Architectures.UNetSemanticSegmenter import *
 
 import numpy as np
 np.random.seed(2885)
@@ -58,7 +58,7 @@ class Network_Class:
         # -----------------------------------
         # NETWORK ARCHITECTURE INITIALISATION
         # -----------------------------------
-        self.model = Net(param).to(self.device)
+        self.model = UNetSmnticSgmntr(in_ch=3, inside_ch=param["MODEL"]["NB_CHANNEL"],depth=1,threshold=0.5).to(self.device)
 
         # -------------------
         # TRAINING PARAMETERS

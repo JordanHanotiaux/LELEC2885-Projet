@@ -1,6 +1,7 @@
 from Dataset.dataLoader import *
 from Dataset.makeGraph import *
 from Networks.Architectures.UNetSemanticSegmenter import *
+from Networks.Architectures.basicNetwork import *
 
 import numpy as np
 np.random.seed(2885)
@@ -13,6 +14,10 @@ from torch.utils.data import DataLoader
 from torch.utils.data import random_split
 import torch.nn as nn
 import torch.optim
+
+from sklearn.metrics import jaccard_score
+from sklearn.metrics import accuracy_score, recall_score, precision_score
+import copy
 
 
 # --------------------------------------------------------------------------------
@@ -59,6 +64,7 @@ class Network_Class:
         # NETWORK ARCHITECTURE INITIALISATION
         # -----------------------------------
         self.model = UNetSmnticSgmntr(in_ch=3, inside_ch=param["MODEL"]["NB_CHANNEL"],depth=1,threshold=0.5).to(self.device)
+        #self.model = Net(param).to(self.device)
 
         # -------------------
         # TRAINING PARAMETERS
@@ -87,10 +93,15 @@ class Network_Class:
     # TRAINING LOOP (fool implementation)
     # -----------------------------------
     def train(self): 
-        # train for a given number of epochs
+        
+        tresh = 0.5
         train_losses, val_losses = [], []
+        t_accuracies, t_recalls, t_precisions = [], [], []
+        v_accuracies, v_recalls, v_precisions = [], [], []
 
         for i in range(self.epoch):
+
+            tmp_accuracies, tmp_recalls, tmp_precisions = [], [], []
 
             #Train mode
             self.model.train()
@@ -109,9 +120,30 @@ class Network_Class:
                 loss.backward()
                 self.optimizer.step()
 
-            #Average loss
+                #Compute metrics
+                outputs = outputs.detach().cpu().numpy()
+                masks = masks.cpu().numpy()
+                out = (outputs > tresh).astype(np.int32)
+
+                acc = accuracy_score(masks.flatten(), out.flatten())
+                tmp_accuracies.append(acc)
+
+                rec = recall_score(masks.flatten(), out.flatten())
+                tmp_recalls.append(rec)
+
+                prec = precision_score(masks.flatten(), out.flatten())
+                tmp_precisions.append(prec)
+                
+
+
             avg_train_loss = train_loss / len(self.trainDataLoader)
             train_losses.append(avg_train_loss)
+
+            t_accuracies.append(np.mean(tmp_accuracies))
+            t_recalls.append(np.mean(tmp_recalls))
+            t_precisions.append(np.mean(tmp_precisions))
+
+            tmp_accuracies, tmp_recalls, tmp_precisions = [], [], []
 
             #Evaluation
             self.model.eval()
@@ -124,12 +156,37 @@ class Network_Class:
                     loss = self.criterion(outputs, masks)
                     val_loss += loss.item()
 
+                    outputs = outputs.cpu().numpy()
+                    masks = masks.cpu().numpy()
+
+                    #Compute metrics
+                    out = (outputs > tresh).astype(np.int32)
+
+                    acc = accuracy_score(masks.flatten(), out.flatten())
+                    tmp_accuracies.append(acc)
+
+                    rec = recall_score(masks.flatten(), out.flatten())
+                    tmp_recalls.append(rec)
+
+                    prec = precision_score(masks.flatten(), out.flatten())
+                    tmp_precisions.append(prec)
+
             #Average loss
             avg_val_loss = val_loss / len(self.valDataLoader)
             val_losses.append(avg_val_loss)
 
+            v_accuracies.append(np.mean(tmp_accuracies))
+            v_recalls.append(np.mean(tmp_recalls))
+            v_precisions.append(np.mean(tmp_precisions))
+
             print(f"Loss at {i}-th epoch: ")
             print(f"Train Loss: {avg_train_loss:.4f} | Val Loss: {avg_val_loss:.4f}")
+            print(f"  Train - Accuracy: {t_accuracies[-1]:.4f}, "
+                f"Recall: {t_recalls[-1]:.4f}, "
+                f"Precision: {t_precisions[-1]:.4f}")
+            print(f"  Val   - Accuracy: {v_accuracies[-1]:.4f}, "
+                f"Recall: {v_recalls[-1]:.4f}, "
+                f"Precision: {v_precisions[-1]:.4f}")
 
             modelWts = copy.deepcopy(self.model.state_dict())
 
@@ -139,6 +196,7 @@ class Network_Class:
         torch.save(modelWts, wghtsPath + '/wghts.pkl')
 
         self.plot(train_losses, val_losses)
+        self.plot(t_accuracies, v_accuracies)
 
 
 
@@ -180,3 +238,16 @@ class Network_Class:
         # Quantitative Evaluation
         # Implement this ! 
 
+        IoU_scores = []
+        for pred, GT in zip(allPreds, allGT):
+            
+            pred = pred.flatten()
+            GT = GT.flatten()
+
+            IoU = jaccard_score(GT, pred)
+            IoU_scores.append(IoU)
+
+        mean_iou = np.mean(IoU_scores)
+
+        print(f"Quantitative Evaluation: {mean_iou:.4f}")
+        

@@ -195,21 +195,58 @@ class Network_Class:
         createFolder(wghtsPath)
         torch.save(modelWts, wghtsPath + '/wghts.pkl')
 
-        self.plot(train_losses, val_losses)
-        self.plot(t_accuracies, v_accuracies)
+        self.plot_metrics(train_losses,val_losses,t_accuracies,v_accuracies,t_recalls,v_recalls,t_precisions,v_precisions)
 
 
 
-    def plot(self, train_losses, val_losses):
-        plt.figure(figsize=(10, 6))
-        plt.plot(train_losses, label='Train Loss')
-        plt.plot(val_losses, label='Validation Loss')
-        plt.xlabel('Epoch')
-        plt.ylabel('Loss')
-        plt.title('Training and Validation Loss')
+
+    def plot_metrics(self, train_losses, val_losses, t_accuracies, v_accuracies, t_recalls, v_recalls, t_precisions, v_precisions):
+        epochs = range(1, len(train_losses) + 1)
+
+        # Plot des pertes (loss)
+        plt.figure(figsize=(12, 6))
+        plt.plot(epochs, train_losses, label="Train Loss", marker='o')
+        plt.plot(epochs, val_losses, label="Validation Loss", marker='o')
+        plt.title("Training and Validation Loss")
+        plt.xlabel("Epochs")
+        plt.ylabel("Loss")
         plt.legend()
-        plt.grid(True)
+        plt.grid()
         plt.show()
+
+        # Plot des précisions (accuracy)
+        plt.figure(figsize=(12, 6))
+        plt.plot(epochs, t_accuracies, label="Train Accuracy", marker='o')
+        plt.plot(epochs, v_accuracies, label="Validation Accuracy", marker='o')
+        plt.title("Training and Validation Accuracy")
+        plt.xlabel("Epochs")
+        plt.ylabel("Accuracy")
+        plt.legend()
+        plt.grid()
+        plt.show()
+
+        # Plot du rappel (recall)
+        plt.figure(figsize=(12, 6))
+        plt.plot(epochs, t_recalls, label="Train Recall", marker='o')
+        plt.plot(epochs, v_recalls, label="Validation Recall", marker='o')
+        plt.title("Training and Validation Recall")
+        plt.xlabel("Epochs")
+        plt.ylabel("Recall")
+        plt.legend()
+        plt.grid()
+        plt.show()
+
+        # Plot des précisions (precision)
+        plt.figure(figsize=(12, 6))
+        plt.plot(epochs, t_precisions, label="Train Precision", marker='o')
+        plt.plot(epochs, v_precisions, label="Validation Precision", marker='o')
+        plt.title("Training and Validation Precision")
+        plt.xlabel("Epochs")
+        plt.ylabel("Precision")
+        plt.legend()
+        plt.grid()
+        plt.show()
+
     # -------------------------------------------------
     # EVALUATION PROCEDURE (ultra basic implementation)
     # -------------------------------------------------
